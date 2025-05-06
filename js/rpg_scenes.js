@@ -556,6 +556,20 @@ Scene_KeyboardGuide.prototype.update = function() {
         SoundManager.playCancel();
         SceneManager.pop();
     }
+
+    // Di plugin tombol Info
+if (Input.isTriggered("info")) {
+    // Tambahkan background PNG
+    var infoBg = new Sprite(ImageManager.loadPicture("info_slide1_bg"));
+    infoBg.z = 0;
+    infoBg.name = "InfoBG";
+    SceneManager._scene.addChildAt(infoBg, 0);
+
+    // Tampilkan window info
+    var infoWindow = new Window_Info(); // Atau Window_Help, dll
+    SceneManager._scene.addChild(infoWindow);
+}
+
 };
 
 Scene_Title.prototype.playTitleMusic = function() {
@@ -1616,13 +1630,154 @@ function Scene_Options() {
 Scene_Options.prototype = Object.create(Scene_MenuBase.prototype);
 Scene_Options.prototype.constructor = Scene_Options;
 
-Scene_Options.prototype.initialize = function() {
-    Scene_MenuBase.prototype.initialize.call(this);
-};
-
 Scene_Options.prototype.create = function() {
     Scene_MenuBase.prototype.create.call(this);
+    this.createWindowLayer();
+
+    this._currentSlide = 0;
+
+    // Tambah background PNG setelah window layer
+    this._customBg = new Sprite(ImageManager.loadPicture("info_slide1_bg"));
+    this._customBg.x = 0;
+    this._customBg.y = 0;
+    this.addChildAt(this._customBg, this.children.indexOf(this._windowLayer));
+
+    // SLIDE 2 & 3
+    this._slide1 = new Sprite(ImageManager.loadPicture("info_slide1"));
+    this._slide2 = new Sprite(ImageManager.loadPicture("info_slide2"));
+    this._slide1.visible = false;
+    this._slide2.visible = false;
+    this.addChild(this._slide1);
+    this.addChild(this._slide2);
+
+    // WINDOW OPTIONS (Slide 1)
     this.createOptionsWindow();
+
+    // X BUTTON
+    this._xButton = new Window_Base(10, 10, 100, 100);
+    this._xButton.setBackgroundType(2);
+    this._xButton.contents.fontSize = 40;
+    this._xButton.drawText("X", 0, 0, this._xButton.contentsWidth(), "center");
+    this._xButton.update = () => {
+        Window_Base.prototype.update.call(this._xButton);
+        if (!this._xButton.visible || this._xButton.openness === 0) return;
+    
+        if (TouchInput.isTriggered()) {
+            const x = TouchInput.x;
+            const y = TouchInput.y;
+            if (x >= this._xButton.x && x < this._xButton.x + this._xButton.width &&
+                y >= this._xButton.y && y < this._xButton.y + this._xButton.height) {
+                SoundManager.playCancel();
+                this.popScene();
+            }
+        }
+    };    
+    this.addChild(this._xButton);
+
+    // Tombol navigasi <
+    const centerY = (Graphics.height - 60) / 2;
+    this._backButton = new Window_Base(10, centerY, 80, 100);
+    this._backButton.setBackgroundType(2);
+    this._backButton.contents.fontSize = 40;
+    this._backButton.drawText("<", 0, 0, this._backButton.contentsWidth(), "center");
+    this._backButton.update = () => {
+        Window_Base.prototype.update.call(this._backButton);
+        if (!this._backButton.visible || this._backButton.openness === 0) return;
+    
+        if (TouchInput.isTriggered()) {
+            const x = TouchInput.x;
+            const y = TouchInput.y;
+            if (x >= this._backButton.x && x < this._backButton.x + this._backButton.width &&
+                y >= this._backButton.y && y < this._backButton.y + this._backButton.height) {
+                SoundManager.playCursor();
+                this.changeSlide(this._currentSlide - 1);
+            }
+        }
+    };    
+    this.addChild(this._backButton);
+
+    // Tombol navigasi >
+    this._nextButton = new Window_Base(Graphics.width - 90, centerY, 80, 100);
+    this._nextButton.setBackgroundType(2);
+    this._nextButton.contents.fontSize = 40;
+    this._nextButton.drawText(">", 0, 0, this._nextButton.contentsWidth(), "center");
+    this._nextButton.update = () => {
+        Window_Base.prototype.update.call(this._nextButton);
+        if (this._nextButton.visible && TouchInput.isTriggered()) {
+            const x = TouchInput.x;
+            const y = TouchInput.y;
+            if (x >= this._nextButton.x && x < this._nextButton.x + this._nextButton.width &&
+                y >= this._nextButton.y && y < this._nextButton.y + this._nextButton.height) {
+                SoundManager.playCursor();
+                this.changeSlide(this._currentSlide + 1);
+            }
+        }
+    };
+    this.addChild(this._nextButton);
+
+    // Tampilkan slide pertama
+    this.changeSlide(0);
+};
+
+Scene_Options.prototype.changeSlide = function(index) {
+    this._currentSlide = Math.max(0, Math.min(2, index));
+
+    const isSlide1 = this._currentSlide === 0;
+    this._optionsWindow.visible = isSlide1;
+    this._optionsWindow.active = isSlide1;
+    this._customBg.visible = isSlide1;
+
+    this._slide1.visible = this._currentSlide === 1;
+    this._slide2.visible = this._currentSlide === 2;
+
+    this._backButton.visible = this._currentSlide > 0;
+    this._nextButton.visible = this._currentSlide < 2;
+    this._xButton.visible = true;
+this._xButton.active = true;
+};
+
+Scene_Options.prototype.changeSlide = function(index) {
+    this._currentSlide = Math.max(0, Math.min(2, index));
+
+    const isSlide1 = this._currentSlide === 0;
+
+    // Slide 1: Volume
+    this._optionsWindow.visible = isSlide1;
+    this._optionsWindow.active = isSlide1;
+    this._customBg.visible = isSlide1;
+
+    // Slide 2 & 3: Gambar
+    this._slide1.visible = this._currentSlide === 1;
+    this._slide2.visible = this._currentSlide === 2;
+
+    // TOMBOL-TOMBOL TETAP TAMPIL DI SEMUA SLIDE
+    this._backButton.visible = this._currentSlide > 0;
+    this._nextButton.visible = this._currentSlide < 2;
+
+    this._backButton.active = this._backButton.visible;
+    this._nextButton.active = this._nextButton.visible;
+
+    // XButton selalu aktif
+    this._xButton.visible = true;
+    this._xButton.active = true;
+};
+
+Scene_Options.prototype.update = function() {
+    Scene_MenuBase.prototype.update.call(this);
+
+    if (Input.isTriggered('right') && this._currentSlide < 2) {
+        SoundManager.playCursor();
+        this.changeSlide(this._currentSlide + 1);
+    }
+
+    if (Input.isTriggered('left') && this._currentSlide > 0) {
+        SoundManager.playCursor();
+        this.changeSlide(this._currentSlide - 1);
+    }
+};
+
+Scene_Options.prototype.initialize = function() {
+    Scene_MenuBase.prototype.initialize.call(this);
 };
 
 Scene_Options.prototype.terminate = function() {

@@ -26,10 +26,10 @@
 
   Window_XButton.prototype.update = function() {
       Window_Base.prototype.update.call(this);
-      if (this.isClicked()) {
-          SoundManager.playCancel();
-          SceneManager.pop();
-      }
+      if (this.visible && this.isClicked()) {
+        SoundManager.playCancel();
+        SceneManager.pop();
+    }    
   };
 
   Window_XButton.prototype.isClicked = function() {
@@ -66,10 +66,10 @@
 
   Window_NavButton.prototype.update = function() {
       Window_Base.prototype.update.call(this);
-      if (this.isClicked()) {
-          SoundManager.playCursor();
-          if (this._callback) this._callback();
-      }
+      if (this.visible && this.isClicked()) {
+        SoundManager.playCursor();
+        if (this._callback) this._callback();
+    }    
   };
 
   Window_NavButton.prototype.isClicked = function() {
@@ -96,60 +96,78 @@
 
   Scene_PanduanKeyboard.prototype.create = function() {
     Scene_Base.prototype.create.call(this);
-
-    this._guide1 = new Sprite(ImageManager.loadPicture("keyboard_guide1"));
-    this._guide2 = new Sprite(ImageManager.loadPicture("keyboard_guide2"));
-    this._guide2.visible = false;
-
-    this.addChild(this._guide1);
-    this.addChild(this._guide2);
-
+  
+    this._currentIndex = 0;
+  
+    // Load semua gambar slide
+    this._guides = [
+      new Sprite(ImageManager.loadPicture("baloninteraksi")),
+      new Sprite(ImageManager.loadPicture("arahpanah")),
+      new Sprite(ImageManager.loadPicture("darah")),
+      new Sprite(ImageManager.loadPicture("lawan")),
+      new Sprite(ImageManager.loadPicture("tamat"))
+    ];
+  
+    // Tambahkan semua ke scene, tapi sembunyikan selain index 0
+    for (let i = 0; i < this._guides.length; i++) {
+      this._guides[i].visible = (i === 0);
+      this.addChild(this._guides[i]);
+    }
+  
     this.createXButton();
     this.createNavButtons();
   };
-
+  
   Scene_PanduanKeyboard.prototype.createXButton = function() {
-      const xButton = new Window_XButton(10, 10, 100, 100);
-      this.addChild(xButton);
-      this._xButton = xButton;
+    const xButton = new Window_XButton(10, 10, 100, 100);
+    this.addChild(xButton);
+    this._xButton = xButton;
   };
-
+  
   Scene_PanduanKeyboard.prototype.createNavButtons = function() {
     const centerY = (Graphics.height - 60) / 2;
-
+  
     this._nextButton = new Window_NavButton(Graphics.width - 90, centerY, 80, 100, ">", () => {
-      this._guide1.visible = false;
-      this._guide2.visible = true;
+      this.showSlide(this._currentIndex + 1);
     });
     this.addChild(this._nextButton);
-
+  
     this._backButton = new Window_NavButton(10, centerY, 80, 100, "<", () => {
-      this._guide1.visible = true;
-      this._guide2.visible = false;
+      this.showSlide(this._currentIndex - 1);
     });
     this.addChild(this._backButton);
   };
-
+  
+  Scene_PanduanKeyboard.prototype.showSlide = function(index) {
+    if (index < 0 || index >= this._guides.length) return;
+  
+    this._guides[this._currentIndex].visible = false;
+    this._guides[index].visible = true;
+    this._currentIndex = index;
+  };
+  
   Scene_PanduanKeyboard.prototype.update = function() {
     Scene_Base.prototype.update.call(this);
+  
+    // Tombol navigasi hanya aktif jika memungkinkan
+    this._backButton.visible = this._currentIndex > 0;
+    this._nextButton.visible = this._currentIndex < this._guides.length - 1;
   
     if (Input.isTriggered('cancel')) {
       SoundManager.playCancel();
       SceneManager.pop();
     }
   
-    if (Input.isTriggered('right')) {
+    if (Input.isTriggered('right') && this._currentIndex < this._guides.length - 1) {
       SoundManager.playCursor();
-      this._guide1.visible = false;
-      this._guide2.visible = true;
+      this.showSlide(this._currentIndex + 1);
     }
   
-    if (Input.isTriggered('left')) {
+    if (Input.isTriggered('left') && this._currentIndex > 0) {
       SoundManager.playCursor();
-      this._guide1.visible = true;
-      this._guide2.visible = false;
+      this.showSlide(this._currentIndex - 1);
     }
-  };  
+  };      
 
   // ===== Scene Profile =====
   function Scene_Profile() {
@@ -183,6 +201,109 @@
       SceneManager.pop();
     }
   };
+
+  function Scene_Info() {
+    this.initialize.apply(this, arguments);
+  }
+  
+  Scene_Info.prototype = Object.create(Scene_Base.prototype);
+  Scene_Info.prototype.constructor = Scene_Info;
+  
+  Scene_Info.prototype.initialize = function() {
+    Scene_Base.prototype.initialize.call(this);
+    this._currentSlide = 0; // 0 = options, 1+ = gambar
+  };
+  
+  Scene_Info.prototype.create = function() {
+    Scene_Base.prototype.create.call(this);
+
+    this._backgroundSprite = new Sprite(ImageManager.loadPicture("info_slide1_bg"));
+    this.addChild(this._backgroundSprite);
+    this._backgroundSprite.visible = true;
+
+    //Option window
+    this._optionsWindow = new Window_Options();
+    this._optionsWindow.x = (Graphics.width - this._optionsWindow.width) / 2;
+    this._optionsWindow.y = (Graphics.height - this._optionsWindow.height) / 2;
+    this.addChild(this._optionsWindow);
+
+    this._slides = [];
+    const slide1 = new Sprite(ImageManager.loadPicture("info_slide1"));
+    const slide2 = new Sprite(ImageManager.loadPicture("info_slide2"));
+    slide1.visible = false;
+    slide2.visible = false;
+    this._slides.push(slide1, slide2);
+    this.addChild(slide1);
+    this.addChild(slide2);
+
+    this._xButton = new Window_XButton(10, 10, 100, 100);
+    this.addChild(this._xButton);
+
+    const centerY = (Graphics.height - 60) / 2;
+    this._nextButton = new Window_NavButton(Graphics.width - 90, centerY, 80, 100, ">", () => {
+        this.changeSlide(this._currentSlide + 1);
+    });
+    this.addChild(this._nextButton);
+
+    this._backButton = new Window_NavButton(10, centerY, 80, 100, "<", () => {
+        this.changeSlide(this._currentSlide - 1);
+    });
+    this.addChild(this._backButton);
+
+    this.updateSlideVisibility();
+};
+  
+Scene_Info.prototype.changeSlide = function(index) {
+  SoundManager.playCursor();
+  this._currentSlide = index.clamp(0, this._slides.length); // Mencegah out of range
+  this.updateSlideVisibility();
+
+  // Menampilkan background khusus untuk slide pertama (Slide 0)
+  if (this._currentSlide === 0) {
+      this._backgroundSprite.visible = true;  // Tampilkan background pada slide pertama
+  } else {
+      this._backgroundSprite.visible = false;  // Sembunyikan background di slide lainnya
+  }
+};
+  
+Scene_Info.prototype.updateSlideVisibility = function() {
+  // Slide 0 = options
+  const isOptionSlide = this._currentSlide === 0;
+  this._optionsWindow.visible = isOptionSlide;
+  this._optionsWindow.active = isOptionSlide;
+
+  // Slide gambar
+  this._slides.forEach((slide, i) => {
+      slide.visible = (this._currentSlide === i + 1);
+  });
+
+  // Navigasi tombol: < muncul kalau bukan di awal, > muncul kalau belum di akhir
+  this._backButton.visible = this._currentSlide > 0;
+  this._nextButton.visible = this._currentSlide < this._slides.length;
+};
+  
+  Scene_Info.prototype.update = function() {
+    Scene_Base.prototype.update.call(this);
+  
+    if (Input.isTriggered('cancel')) {
+      SoundManager.playCancel();
+      SceneManager.pop();
+    }
+  
+    // Keyboard navigasi
+    if (Input.isTriggered('right') && this._currentSlide < this._slides.length) {
+      this.changeSlide(this._currentSlide + 1);
+    }
+  
+    if (Input.isTriggered('left') && this._currentSlide > 0) {
+      this.changeSlide(this._currentSlide - 1);
+    }
+  };  
+
+  Scene_Info.prototype.createBackground = function() {
+    this._backgroundSprite = new Sprite(ImageManager.loadPicture("volume_bg"));
+    this.addChild(this._backgroundSprite);
+  };  
 
   // ===== Window Confirm Exit =====
   function Window_ConfirmExit() {
@@ -219,6 +340,8 @@
     this._commandWindow.setHandler('exit', this.commandKeluar.bind(this));
     this._commandWindow.setHandler('panduan', this.commandPanduan.bind(this));
     this._commandWindow.setHandler('profile', this.commandProfile.bind(this));
+    this._commandWindow.setHandler('options', this.commandInfo.bind(this));
+
   };
 
   const _Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
@@ -226,7 +349,7 @@
     this.addCommand('♥ Permainan Baru', 'newGame');
     this.addCommand('♥ Lanjut Permainan', 'continue', this.isContinueEnabled());
     this.addCommand('♥ Panduan Bermain', 'panduan');
-    this.addCommand('♥ Pengaturan', 'options');
+    this.addCommand('♥ Info', 'options');
     this.addCommand('♥ Tentang', 'profile');
     this.addCommand('♥ Keluar', 'exit');
   };
@@ -280,5 +403,10 @@
     SoundManager.playOk();
     SceneManager.push(Scene_Profile);
   };
+
+  Scene_Title.prototype.commandInfo = function() {
+    SoundManager.playOk();
+    SceneManager.push(Scene_Info);
+  };  
 
 })();

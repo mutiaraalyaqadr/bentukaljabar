@@ -5756,7 +5756,7 @@ Window_TitleCommand.prototype.updatePlacement = function() {
 Window_TitleCommand.prototype.makeCommandList = function() {
     this.addCommand("♥ Permainan Baru",   'newGame');
     this.addCommand("♥ Lanjut Permainan", 'continue', this.isContinueEnabled());
-    this.addCommand("♥ Pengaturan",   'options');
+    this.addCommand("♥ Info",   'options');
 };
 
 Window_TitleCommand.prototype.isContinueEnabled = function() {
