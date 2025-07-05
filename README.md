@@ -1,0 +1,2 @@
+# bentukaljabar
+SMP / MTs VII
