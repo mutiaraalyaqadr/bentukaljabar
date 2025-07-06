@@ -5,6 +5,11 @@
 
 (function() {
 
+  // Fungsi untuk mengecek apakah device adalah mobile (HP/Tablets)
+  Utils.isMobileDevice = function() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  };
+
   function Window_LoginForm() {
     this.initialize(...arguments);
   }
@@ -14,7 +19,7 @@
 
   Window_LoginForm.prototype.initialize = function(x, y, w, h) {
     Window_Base.prototype.initialize.call(this, x, y, w, h);
-    this.setBackgroundType(0);
+    this.setBackgroundType(0);  // Menggunakan frame RPG Maker
     this.drawForm();
     this.createHtmlInputs();
   };
@@ -26,13 +31,13 @@
   };
 
   Window_LoginForm.prototype.createHtmlInputs = function() {
-    // Kolom Password
+    // Membuat kolom password
     this._passwordInput = document.createElement("input");
     this._passwordInput.type = "password";
     this._passwordInput.placeholder = "Password";
     this._passwordInput.style.position = "absolute";
     this._passwordInput.style.left = `calc(50% - 150px)`;
-    this._passwordInput.style.top = `calc(50% - 50px)`; // Ditinggikan biar ga nutup teks
+    this._passwordInput.style.top = `calc(50% - 50px)`;  // Menyesuaikan posisi input
     this._passwordInput.style.width = `300px`;
     this._passwordInput.style.height = `60px`;
     this._passwordInput.style.fontSize = `40px`;
@@ -41,12 +46,15 @@
 
     // Fix Backspace/Delete tidak bisa
     this._passwordInput.addEventListener("keydown", function(e) {
-      e.stopPropagation();
+      e.stopPropagation();  // Menangani input keyboard
     });
 
-    setTimeout(() => {
-      this._passwordInput.focus();
-    }, 50);
+    // Fokus otomatis hanya untuk Desktop/Laptop
+    if (!Utils.isMobileDevice()) {
+      setTimeout(() => {
+        this._passwordInput.focus();  // Fokus otomatis di Desktop/Laptop
+      }, 50);
+    }
   };
 
   Window_LoginForm.prototype.removeHtmlInputs = function() {
