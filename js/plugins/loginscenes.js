@@ -55,6 +55,13 @@
         this._passwordInput.focus();  // Fokus otomatis di Desktop/Laptop
       }, 50);
     }
+
+    // Agar mobile bisa fokus dengan klik manual
+    this._passwordInput.addEventListener("click", () => {
+      if (!Utils.isMobileDevice()) {
+        this._passwordInput.focus();
+      }
+    });
   };
 
   Window_LoginForm.prototype.removeHtmlInputs = function() {
@@ -87,7 +94,7 @@
     if (this._backSprite2) this._backSprite2.filters = [blur];
     if (this._commandWindow) this._commandWindow.filters = [blur];
 
-    const w = 350, h = 350;
+    const w = 450, h = 350;
     const x = (Graphics.boxWidth - w) / 2;
     const y = (Graphics.boxHeight - h) / 2;
     this._loginWindow = new Window_LoginForm(x, y, w, h);
