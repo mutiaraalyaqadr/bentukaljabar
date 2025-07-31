@@ -20,5 +20,5 @@ var $plugins =
 {"name":"CloseButtonText","status":true,"description":"Menambahkan tombol \\\"X\\\" berbasis teks di pojok kanan atas scene tertentu - v1.1 (Fixed Version)","parameters":{"Offset X":"10","Offset Y":"10","Window Width":"64","Window Height":"48","Window Opacity":"192","Text Size":"20","Scenes":"[\"Window_Options\"]"}},
 {"name":"score","status":true,"description":"Menampilkan nilai (dari Variable ID 1) di pojok kiri atas saat berada di map. Cocok untuk skor atau level progress.","parameters":{}},
 {"name":"tp","status":true,"description":"Menyembunyikan bar TP dari semua tampilan (battle, menu, dsb)","parameters":{}},
-{"name":"loginscenes","status":true,"description":"Menambahkan login scene sebelum menu utama (Scene_Title) - dengan blur latar belakang.","parameters":{}}
+{"name":"loginscenes","status":false,"description":"Menambahkan login scene sebelum menu utama (Scene_Title) - dengan blur latar belakang.","parameters":{}}
 ];
